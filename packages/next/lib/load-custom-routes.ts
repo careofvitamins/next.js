@@ -1,4 +1,5 @@
 import * as pathToRegexp from 'next/dist/compiled/path-to-regexp'
+import Proxy from 'next/dist/compiled/http-proxy'
 import { parse as parseUrl } from 'url'
 import {
   PERMANENT_REDIRECT_STATUS,
@@ -10,6 +11,7 @@ export type Rewrite = {
   destination: string
   basePath?: false
   locale?: false
+  proxyOptions?: Proxy.ServerOptions
 }
 
 export type Header = {
@@ -158,6 +160,7 @@ function checkCustomRoutes(
       'destination',
       'basePath',
       'locale',
+      'proxyOptions',
       ...(isRedirect ? ['statusCode', 'permanent'] : []),
     ])
   } else {

@@ -790,7 +790,16 @@ export default class Server {
     })
 
     const rewrites = this.customRoutes.rewrites.map((rewrite) => {
-      const rewriteRoute = getCustomRoute(rewrite, 'rewrite')
+      const {
+        proxyOptions: routeProxyOptions = {},
+        ...rewriteRoute
+      } = getCustomRoute(rewrite, 'rewrite')
+
+      const defaultProxyOptions = {
+        changeOrigin: true,
+        ignorePath: true,
+      } as Proxy.ServerOptions
+
       return {
         ...rewriteRoute,
         check: true,
@@ -812,16 +821,20 @@ export default class Server {
             delete (parsedDestination as any).query
             parsedDestination.search = stringifyQuery(req, query)
 
-            const target = formatUrl(parsedDestination)
-            const proxy = new Proxy({
-              target,
-              changeOrigin: true,
-              ignorePath: true,
-            })
+            const proxyOptions = {
+              target: formatUrl(parsedDestination),
+              ...defaultProxyOptions,
+              ...routeProxyOptions,
+            } as Proxy.ServerOptions
+
+            const proxy = new Proxy(proxyOptions)
             proxy.web(req, res)
 
             proxy.on('error', (err: Error) => {
-              console.error(`Error occurred proxying ${target}`, err)
+              console.error(
+                `Error occurred proxying ${proxyOptions.target}`,
+                err
+              )
             })
             return {
               finished: true,
